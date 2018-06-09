@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#161823</color>
+    <color name="colorPrimaryDark">#161823</color>
+    <color name="colorAccent">#80cbc4</color>
+
+    <color name="text_accent">#e5000000</color>
+    <color name="text_default">#bb000000</color>
+    <color name="text_secondary">#89000000</color>
+    <color name="text_hint">#66000000</color>
+
+    <color name="text_accent_dark">#e5ffffff</color>
+    <color name="text_default_dark">#bbffffff</color>
+    <color name="text_secondary_dark">#89ffffff</color>
+    <color name="text_hint_dark">#66ffffff</color>
+
+
+    <color name="app_color_theme_1">#BBEF5362</color> <!-- Grapefruit -->
+    <color name="app_color_theme_2">#BBFE6D4B</color> <!-- Bittersweet -->
+    <color name="app_color_theme_3">#BBFFCF47</color> <!-- Sunflower -->
+    <color name="app_color_theme_4">#BB9FD661</color> <!-- Grass -->
+    <color name="app_color_theme_5">#BB3FD0AD</color> <!-- Mint -->
+    <color name="app_color_theme_6">#BB2BBDF3</color> <!-- Aqua -->
+    <color name="app_color_theme_7">#BB5A9AEF</color> <!-- Blue Jeans -->
+    <color name="app_color_theme_8">#BBAC8FEF</color> <!-- Lavender -->
+    <color name="app_color_theme_9">#BBEE85C1</color> <!-- Pink Rose -->
+
+    <color name="color_transparent">#00000000</color>
+    <color name="color_white">#ffffff</color>
+    <color name="color_75_white">#C0FFFFFF</color>
+    <color name="color_50_white">#80FFFFFF</color>
+    <color name="color_25_white">#40FFFFFF</color>
+    <color name="color_15_white">#26FFFFFF</color>
+    <color name="color_10_white">#19FFFFFF</color>
+
+    <color name="color_pure_black">#000000</color>
+    <color name="color_75_pure_black">#C0000000</color>
+    <color name="color_60_pure_black">#99000000</color>
+    <color name="color_50_pure_black">#80000000</color>
+    <color name="color_25_pure_black">#40000000</color>
+    <color name="color_15_pure_black">#26000000</color>
+    <color name="color_10_pure_black">#19000000</color>
+
+
+    <color name="color_separator">#DEE0E2</color>
+    <color name="color_separator_darken">#D4D6D8</color>
+
+    <color name="color_gray_1">#353C46</color>
+    <color name="color_gray_2">#49505A</color>
+    <color name="color_gray_3">#5D646E</color>
+    <color name="color_gray_4">#717882</color>
+    <color name="color_gray_5">#858C96</color>
+    <color name="color_gray_6">#99A0AA</color>
+    <color name="color_gray_7">#ADB4BE</color>
+    <color name="color_gray_8">#C4C8D0</color>
+    <color name="color_gray_9">#D8DCE4</color>
+
+    <color name="border">#78ffffff</color>
+    <color name="toast_bg">#80000000</color>
+    <color name="toast_bg_loading">#50000000</color>
+    <color name="toast_text">#fefefe</color>
+</resources>
