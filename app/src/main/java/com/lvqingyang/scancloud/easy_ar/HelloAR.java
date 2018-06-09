@@ -57,6 +57,7 @@ class HelloAR {
     private Vec2I mViewSize = new Vec2I(0, 0);
     private int mRotation = 0;
     private Vec4I mVec4I = new Vec4I(0, 0, 1280, 720);
+    private boolean mIsTargetTracking=false;
     private OnTargetChangeListener mOnTargetChangeListener;
 
     HelloAR() {
@@ -131,10 +132,17 @@ class HelloAR {
             public void invoke(int status, ArrayList<Target> targets) {
                 if (status == CloudStatus.Success) {
                     Log.i("HelloAR", "CloudRecognizerCallBack: Success");
+                    mIsTargetTracking=true;
                 } else if (status == CloudStatus.Reconnecting) {
                     Log.i("HelloAR", "CloudRecognizerCallBack: Reconnecting");
                 } else if (status == CloudStatus.Fail) {
                     Log.i("HelloAR", "CloudRecognizerCallBack: Fail");
+                    if(mIsTargetTracking){
+                        if (mOnTargetChangeListener != null) {
+                            mOnTargetChangeListener.targetLost();
+                        }
+                        mIsTargetTracking=false;
+                    }
                 } else {
                     Log.i("HelloAR", "CloudRecognizerCallBack: " + Integer.toString(status));
                 }
@@ -277,7 +285,7 @@ class HelloAR {
                 int status = targetInstance.status();
                 //target是跟踪状态
                 if (status == TargetStatus.Tracked) {
-                    if (BuildConfig.DEBUG) Log.d(TAG, "render: Tracked");
+//                    if (BuildConfig.DEBUG) Log.d(TAG, "render: Tracked");
                     //target id是运行时创建的整形数据。这个id是非0且全局递增的。
                     int id = target.runtimeID();
                     if (mActiveTarget != 0 && mActiveTarget != id) {
@@ -355,7 +363,7 @@ class HelloAR {
 
     private void targetChange(Target target) {
         if (mOnTargetChangeListener != null) {
-            mOnTargetChangeListener.targetChange(target);
+            mOnTargetChangeListener.targetTack(target);
         }
     }
 }

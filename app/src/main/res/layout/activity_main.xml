@@ -13,8 +13,7 @@
         android:layout_height="match_parent" />
 
     <com.lvqingyang.scancloud.view.ScanView
-        android:id="@+id/sv_main"
+        android:id="@+id/sv"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
+        android:layout_height="match_parent"/>
 </RelativeLayout>

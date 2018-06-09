@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import com.lvqingyang.mylibrary.base.BaseActivity;
 import com.lvqingyang.scancloud.base.AppContact;
@@ -23,11 +24,10 @@ import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 @RuntimePermissions
 public class MainActivity extends BaseActivity {
 
-    private android.widget.FrameLayout flpreview;
-    private com.lvqingyang.scancloud.view.ScanView svmain;
-    private GLView mGLView;
-
     private static final String TAG = "MainActivity";
+    private android.widget.FrameLayout flpreview;
+    private GLView mGLView;
+    private com.lvqingyang.scancloud.view.ScanView sv;
 
     @Override
     protected void onCreate(@Nullable Bundle paramBundle) {
@@ -50,16 +50,10 @@ public class MainActivity extends BaseActivity {
     @NeedsPermission({Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO})
     @Override
     protected void initView() {
-        this.svmain = (ScanView) findViewById(R.id.sv_main);
-        svmain.post(new Runnable() {
-            @Override
-            public void run() {
-                svmain.startScan();
-            }
-        });
         this.flpreview = (FrameLayout) findViewById(R.id.fl_preview);
+        this.sv = (ScanView) findViewById(R.id.sv);
 
-        mGLView=new GLView(
+        mGLView = new GLView(
                 this,
                 AppContact.cloud_server_address,
                 AppContact.cloud_key,
@@ -73,15 +67,31 @@ public class MainActivity extends BaseActivity {
     protected void setListener() {
         mGLView.setOnTargetStatusChangeListener(new OnTargetChangeListener() {
             @Override
-            public void targetChange(Target target) {
-                if (BuildConfig.DEBUG) Log.d(TAG, "targetChange: "+target.name());
+            public void targetTack(final Target target) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, target.name(), Toast.LENGTH_SHORT).show();
+                        sv.stopScan();
+                    }
+                });
+            }
+
+            @Override
+            public void targetLost() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "loss", Toast.LENGTH_SHORT).show();
+                        sv.startScan();
+                    }
+                });
             }
         });
     }
 
     @Override
     protected void initData() {
-
     }
 
     @Override
@@ -90,16 +100,20 @@ public class MainActivity extends BaseActivity {
     }
 
     @Override
-    protected void onResume()
-    {
-        super.onResume();
-        if (mGLView != null) { mGLView.onResume(); }
+    protected void onPause() {
+        if (mGLView != null) {
+            mGLView.onPause();
+        }
+        sv.stopScan();
+        super.onPause();
     }
 
     @Override
-    protected void onPause()
-    {
-        if (mGLView != null) { mGLView.onPause(); }
-        super.onPause();
+    protected void onResume() {
+        super.onResume();
+        if (mGLView != null) {
+            mGLView.onResume();
+        }
+        sv.startScan();
     }
 }
