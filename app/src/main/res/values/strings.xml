@@ -7,4 +7,5 @@
     <string name="hint">提示</string>
     <string name="find_ar">发现AR</string>
     <string name="recording">AR录制中...</string>
+    <string name="error">AR录制出错</string>
 </resources>

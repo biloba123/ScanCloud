@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,7 +29,13 @@ import com.lvqingyang.scancloud.helper.IntentHelper;
 import com.lvqingyang.scancloud.view.ScanView;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import cn.easyar.Engine;
+import cn.easyar.FunctorOfVoidFromRecordStatusAndString;
+import cn.easyar.RecordStatus;
 import cn.easyar.Target;
 import io.reactivex.functions.Consumer;
 
@@ -47,8 +54,10 @@ public class MainActivity extends BaseActivity {
     private android.widget.ImageView ivstartrecord;
     private android.widget.ImageView ivstoprecord;
     private android.widget.LinearLayout llvideo;
-    private boolean mIsRecording=false;
+    private boolean mIsRecording = false;
     private TargetMeta mCurTargetMeta;
+    private DateFormat mDateFormat=new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+    private String mUrl = "";
 
     @Override
     protected void onCreate(@Nullable Bundle paramBundle) {
@@ -106,8 +115,11 @@ public class MainActivity extends BaseActivity {
         viewclick.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mCurTargetMeta != null) {
-                    IntentHelper.openBrower(MainActivity.this, mCurTargetMeta.getUrl());
+                if (mCurTargetMeta != null && !mIsRecording) {
+                    String url=mCurTargetMeta.getUrl();
+                    if (!TextUtils.isEmpty(url)) {
+                        IntentHelper.openBrower(MainActivity.this, url);
+                    }
                 }
             }
         });
@@ -159,7 +171,7 @@ public class MainActivity extends BaseActivity {
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            mCurTargetMeta=meta;
+                                            mCurTargetMeta = meta;
                                             Toast.makeText(MainActivity.this, "target改变：" + target.name(), Toast.LENGTH_SHORT).show();
                                         }
                                     });
@@ -220,6 +232,9 @@ public class MainActivity extends BaseActivity {
             mGLView.onPause();
         }
         sv.stopScan();
+        if (mIsRecording) {
+            stopRecord();
+        }
         super.onPause();
     }
 
@@ -239,7 +254,7 @@ public class MainActivity extends BaseActivity {
     }
 
     private void startScan() {
-        if(mIsRecording) {
+        if (mIsRecording) {
             stopRecord();
         }
         llvideo.setVisibility(View.GONE);
@@ -257,17 +272,44 @@ public class MainActivity extends BaseActivity {
         llvideo.setVisibility(View.VISIBLE);
     }
 
+    private void startRecord() {
+        mUrl = prepareUrl();
+
+        mGLView.startRecording(mUrl, new FunctorOfVoidFromRecordStatusAndString() {
+            @Override
+            public void invoke(int status, String value) {
+                switch (status) {
+                    case RecordStatus.OnStarted:
+                        mIsRecording = true;
+                        ivstartrecord.setVisibility(View.GONE);
+                        ivstoprecord.setVisibility(View.VISIBLE);
+                        MyToast.info(MainActivity.this, R.string.recording);
+                        break;
+                    case RecordStatus.OnStopped:
+                        break;
+                    case RecordStatus.FileFailed:
+                        MyToast.error(MainActivity.this, R.string.error);
+                        break;
+                    default:
+                        break;
+
+                }
+                Log.i("HelloAR", "Recorder Callback status: " + Integer.toString(status) + ", MSG: " + value);
+            }
+        });
+    }
+
     private void stopRecord() {
-        mIsRecording=false;
+        mIsRecording = false;
         ivstoprecord.setVisibility(View.GONE);
         ivstartrecord.setVisibility(View.VISIBLE);
-        MyToast.info(this, R.string.recording);
+        mGLView.stopRecording();
+        Toast.makeText(MainActivity.this, "Recorded at " + mUrl, Toast.LENGTH_LONG).show();
     }
 
-    private void startRecord() {
-        mIsRecording=true;
-        ivstartrecord.setVisibility(View.GONE);
-        ivstoprecord.setVisibility(View.VISIBLE);
+    private String prepareUrl() {
+        String timeStamp = mDateFormat.format(new Date());
+        String FileName = timeStamp + ".mp4";
+        return AppContact.FOLDER.getPath()+"/" + FileName;
     }
-
 }

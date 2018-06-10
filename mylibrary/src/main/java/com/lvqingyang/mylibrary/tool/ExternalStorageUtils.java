@@ -55,7 +55,7 @@ public class ExternalStorageUtils {
 
     //获取外存指定目录
     //type: Environment. ...
-    public File getStorageDir(String dirName, String type ){
+    public static File getStorageDir(String dirName, String type ){
         File file=new File(Environment.getExternalStoragePublicDirectory(type),dirName);
         if (!file.mkdir()) {
             Log.e(TAG, "getStorageDir: Directory not created" );

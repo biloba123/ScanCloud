@@ -1,5 +1,11 @@
 package com.lvqingyang.scancloud.base;
 
+import android.os.Environment;
+
+import com.lvqingyang.mylibrary.tool.ExternalStorageUtils;
+
+import java.io.File;
+
 /**
  * @author Lv Qingyang
  * @date 2018/6/9
@@ -14,4 +20,6 @@ public class AppContact {
     public static String cloud_server_address = "214b8b66307aa425ec6eb172a9345d87.cn1.crs.easyar.com:8080";
     public static String cloud_key = "a1a17e9711edf6aded13a6d44f19888b";
     public static String cloud_secret = "jB9DzCEkWWOy0hkmZrFeTmbjW3DCtxTEvUXTJirevlUhSuw2zB6sVWjCJvlqg7cJHZKPdfcTwFZ5F6qNIVw1x100QZZAdYV74i0MgL9B4fjgeQSWDswFpDcIQApMeB7l";
+
+    public static File FOLDER= ExternalStorageUtils.getStorageDir("扫云", Environment.DIRECTORY_MOVIES);
 }
