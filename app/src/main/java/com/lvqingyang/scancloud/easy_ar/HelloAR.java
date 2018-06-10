@@ -127,6 +127,7 @@ class HelloAR {
         boolean status = true;
         status &= camera.open(CameraDeviceType.Default);
         camera.setSize(new Vec2I(1280, 720));
+
         mCloudRecognizer.open(cloud_server_address, cloud_key, cloud_secret, new FunctorOfVoidFromCloudStatus() {
             @Override
             public void invoke(int status) {
@@ -456,5 +457,9 @@ class HelloAR {
         }
         mRecorder.stop();
         mIsRecordingStarted = false;
+    }
+
+    public CameraDevice getCamera() {
+        return camera;
     }
 }

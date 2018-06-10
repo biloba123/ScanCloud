@@ -214,5 +214,9 @@ public class GLView extends GLSurfaceView {
             return configs[0];
         }
     }
+
+    public void setFlashState(boolean isOn){
+        mHelloAR.getCamera().setFlashTorchMode(isOn);
+    }
 }
 

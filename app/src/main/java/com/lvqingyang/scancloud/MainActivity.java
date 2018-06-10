@@ -24,7 +24,6 @@ import com.lvqingyang.scancloud.base.AppContact;
 import com.lvqingyang.scancloud.bean.TargetMeta;
 import com.lvqingyang.scancloud.easy_ar.GLView;
 import com.lvqingyang.scancloud.easy_ar.OnTargetChangeListener;
-import com.lvqingyang.scancloud.helper.FlashLightHelper;
 import com.lvqingyang.scancloud.helper.IntentHelper;
 import com.lvqingyang.scancloud.view.ScanView;
 import com.tbruyelle.rxpermissions2.RxPermissions;
@@ -48,7 +47,6 @@ public class MainActivity extends BaseActivity {
     private GLView mGLView;
     private com.lvqingyang.scancloud.view.ScanView sv;
     private boolean mIsFlashOn = false;
-    private FlashLightHelper mFlashLightHelper;
     private android.widget.TextView tvfindar;
     private View viewclick;
     private android.widget.ImageView ivstartrecord;
@@ -129,7 +127,6 @@ public class MainActivity extends BaseActivity {
 
     @Override
     protected void initData() {
-        mFlashLightHelper = FlashLightHelper.getInstance(this);
     }
 
     @Override
@@ -145,9 +142,11 @@ public class MainActivity extends BaseActivity {
                 return true;
             case R.id.item_flashlight:
                 if (mIsFlashOn) {
-                    mFlashLightHelper.lightSwitch(true);
+                    paramMenuItem.setIcon(R.drawable.ic_flash_on);
+                    mGLView.setFlashState(false);
                 } else {
-                    mFlashLightHelper.lightSwitch(false);
+                    paramMenuItem.setIcon(R.drawable.ic_flash_off);
+                    mGLView.setFlashState(true);
                 }
                 mIsFlashOn = !mIsFlashOn;
                 return true;
