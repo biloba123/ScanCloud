@@ -6,8 +6,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.lvqingyang.scancloud.R;
@@ -24,31 +28,26 @@ import com.lvqingyang.scancloud.R;
 public class ScanView extends FrameLayout {
     private android.widget.ImageView ivscan;
     private android.widget.TextView tvscaninfo;
-    private android.widget.ImageView ivlogo;
     private AnimationDrawable mAnimationDrawable;
+
 
     public ScanView(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         LayoutInflater.from(context).inflate(R.layout.view_scan, this);
-        this.ivlogo = (ImageView) findViewById(R.id.iv_logo);
         this.tvscaninfo = (TextView) findViewById(R.id.tv_scan_info);
         this.ivscan = (ImageView) findViewById(R.id.iv_scan);
 
-        mAnimationDrawable= (AnimationDrawable) ivscan.getDrawable();
+
+        mAnimationDrawable = (AnimationDrawable) ivscan.getDrawable();
     }
 
-    public void startScan(){
-        tvscaninfo.setVisibility(VISIBLE);
-        ivscan.setVisibility(VISIBLE);
+
+    public void startScan() {
         mAnimationDrawable.start();
     }
 
-
-    public void stopScan(){
-        tvscaninfo.setVisibility(GONE);
-        ivscan.setVisibility(GONE);
+    public void stopScan() {
         mAnimationDrawable.stop();
     }
-
 
 }

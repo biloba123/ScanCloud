@@ -31,14 +31,16 @@
     <dimen name="card_content_padding">16dp</dimen>
     <dimen name="card_margin">8dp</dimen>
 
-    <dimen name="icon_big">96dp</dimen>
+    <dimen name="icon_huge">72dp</dimen>
+    <dimen name="icon_big">60dp</dimen>
+    <dimen name="icon_sub_big">48dp</dimen>
+    <dimen name="icon_middle">36dp</dimen>
+
 
     <dimen name="nav_height">48dp</dimen>
     <dimen name="toolbar_elevation">4dp</dimen>
     <dimen name="toast_corner">20dp</dimen>
     <dimen name="toast_icon_size">32dp</dimen>
-    <dimen name="icon_size">72dp</dimen>
-    <dimen name="icon_size_big">96dp</dimen>
     <dimen name="corner">6dp</dimen>
 
 </resources>

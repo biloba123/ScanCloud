@@ -5,4 +5,6 @@
     <string name="info_scan">对准目标，自动扫描</string>
     <string name="need_permission">APP需要获得权限才能使用。</string>
     <string name="hint">提示</string>
+    <string name="find_ar">发现AR</string>
+    <string name="recording">AR录制中...</string>
 </resources>

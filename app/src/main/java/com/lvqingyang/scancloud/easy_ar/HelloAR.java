@@ -12,7 +12,9 @@ import android.opengl.GLES20;
 import android.util.Base64;
 import android.util.Log;
 
+import com.lvqingyang.mylibrary.tool.MyJson;
 import com.lvqingyang.scancloud.BuildConfig;
+import com.lvqingyang.scancloud.bean.TargetMeta;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -319,11 +321,12 @@ class HelloAR {
 
                         String meta = new String(Base64.decode(target.meta(), Base64.URL_SAFE));
                         if (BuildConfig.DEBUG) Log.d(TAG, "render: meda:" + meta);
-                        if (mARVideo == null && mVideoRenderer != null && meta != null) {
+                        TargetMeta targetMeta= MyJson.fromJson(meta, TargetMeta.class);
+                        if (mARVideo == null && mVideoRenderer != null && targetMeta != null) {
                             //target改变，回调通知
-                            targetChange(target);
+                            targetChange(target, targetMeta);
                             mARVideo = new ARVideo();
-                            mARVideo.openStreamingVideo(meta, mVideoRenderer.texId());
+                            mARVideo.openStreamingVideo(targetMeta.getVideoUrl(), mVideoRenderer.texId());
                         }
                         if (mARVideo != null) {
                             targetTrack();
@@ -386,9 +389,9 @@ class HelloAR {
         }
     }
 
-    private void targetChange(Target target) {
+    private void targetChange(Target target, TargetMeta targetMeta) {
         if (mOnTargetChangeListener != null) {
-            mOnTargetChangeListener.targetChange(target);
+            mOnTargetChangeListener.targetChange(target, targetMeta);
         }
     }
 

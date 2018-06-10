@@ -16,4 +16,52 @@
         android:id="@+id/sv"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+
+    <TextView
+        android:id="@+id/tv_find_ar"
+        android:layout_width="180dp"
+        android:layout_height="38dp"
+        android:gravity="center"
+        android:textSize="@dimen/sub_big_text"
+        android:text="@string/find_ar"
+        android:background="@drawable/bg_find_ar"
+        android:textColor="@color/text_accent_dark"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="72dp"/>
+
+    <LinearLayout
+        android:id="@+id/ll_video"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <View
+            android:id="@+id/view_click"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="4"/>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="@dimen/medium_spacing">
+            <ImageView
+                android:id="@+id/iv_start_record"
+                android:layout_width="@dimen/icon_middle"
+                android:layout_height="@dimen/icon_middle"
+                android:src="@drawable/ic_start_record"
+                android:layout_alignParentBottom="true"/>
+            <ImageView
+                android:id="@+id/iv_stop_record"
+                android:visibility="gone"
+                android:layout_width="@dimen/icon_middle"
+                android:layout_height="@dimen/icon_middle"
+                android:src="@drawable/ic_stop_record"
+                android:layout_alignParentBottom="true"/>
+        </RelativeLayout>
+
+    </LinearLayout>
+
 </RelativeLayout>

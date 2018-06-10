@@ -1,5 +1,7 @@
 package com.lvqingyang.scancloud.easy_ar;
 
+import com.lvqingyang.scancloud.bean.TargetMeta;
+
 import cn.easyar.Target;
 
 /**
@@ -12,7 +14,7 @@ import cn.easyar.Target;
  * @since
  */
 public interface OnTargetChangeListener {
-    void targetChange(Target target);
+    void targetChange(Target target, TargetMeta meta);
     void targetLost();
     void targetTrack();
 }
