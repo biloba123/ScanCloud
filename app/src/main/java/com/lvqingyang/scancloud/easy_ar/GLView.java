@@ -18,6 +18,8 @@ import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.opengles.GL10;
 
 import cn.easyar.Engine;
+import cn.easyar.FunctorOfVoidFromPermissionStatusAndString;
+import cn.easyar.FunctorOfVoidFromRecordStatusAndString;
 
 public class GLView extends GLSurfaceView {
     private HelloAR mHelloAR;
@@ -25,8 +27,7 @@ public class GLView extends GLSurfaceView {
     private String cloud_key;
     private String cloud_secret;
 
-    public GLView(Context context, String cloud_server_address, String cloud_key, String cloud_secret)
-    {
+    public GLView(Context context, String cloud_server_address, String cloud_key, String cloud_secret) {
         super(context);
         this.cloud_server_address = cloud_server_address;
         this.cloud_key = cloud_key;
@@ -55,7 +56,9 @@ public class GLView extends GLSurfaceView {
             @Override
             public void onDrawFrame(GL10 gl) {
                 synchronized (mHelloAR) {
+                    mHelloAR.preRender();
                     mHelloAR.render();
+                    mHelloAR.postRender();
                 }
             }
         });
@@ -64,6 +67,18 @@ public class GLView extends GLSurfaceView {
 
     public void setOnTargetStatusChangeListener(OnTargetChangeListener onTargetStatusChangeListener) {
         mHelloAR.setOnTargetChangeListener(onTargetStatusChangeListener);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Engine.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        Engine.onPause();
+        super.onPause();
     }
 
     @Override
@@ -85,16 +100,52 @@ public class GLView extends GLSurfaceView {
         super.onDetachedFromWindow();
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        Engine.onResume();
+    public void requestPermissions(final FunctorOfVoidFromPermissionStatusAndString callback)
+    {
+        this.queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                mHelloAR.requestPermissions(new FunctorOfVoidFromPermissionStatusAndString() {
+                    @Override
+                    public void invoke(final int status, final String msg) {
+                        post(new Runnable() {
+                            @Override
+                            public void run() {
+                                callback.invoke(status, msg);
+                            }
+                        });
+                    }
+                });
+            }
+        });
     }
 
-    @Override
-    public void onPause() {
-        Engine.onPause();
-        super.onPause();
+    public void startRecording(final String path, final FunctorOfVoidFromRecordStatusAndString callback) {
+        this.queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                mHelloAR.startRecording(path, new FunctorOfVoidFromRecordStatusAndString() {
+                    @Override
+                    public void invoke(final int status, final String value) {
+                        post(new Runnable() {
+                            @Override
+                            public void run() {
+                                callback.invoke(status, value);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    public void stopRecording() {
+        this.queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                mHelloAR.stopRecording();
+            }
+        });
     }
 
     private static class ContextFactory implements GLSurfaceView.EGLContextFactory {

@@ -1,8 +1,11 @@
 package com.lvqingyang.scancloud;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -13,15 +16,14 @@ import com.lvqingyang.scancloud.base.AppContact;
 import com.lvqingyang.scancloud.easy_ar.GLView;
 import com.lvqingyang.scancloud.easy_ar.OnTargetChangeListener;
 import com.lvqingyang.scancloud.view.ScanView;
+import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import cn.easyar.Engine;
 import cn.easyar.Target;
-import permissions.dispatcher.NeedsPermission;
-import permissions.dispatcher.RuntimePermissions;
+import io.reactivex.functions.Consumer;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
-@RuntimePermissions
 public class MainActivity extends BaseActivity {
 
     private static final String TAG = "MainActivity";
@@ -47,7 +49,6 @@ public class MainActivity extends BaseActivity {
         return R.layout.activity_main;
     }
 
-    @NeedsPermission({Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO})
     @Override
     protected void initView() {
         this.flpreview = (FrameLayout) findViewById(R.id.fl_preview);
@@ -59,35 +60,81 @@ public class MainActivity extends BaseActivity {
                 AppContact.cloud_key,
                 AppContact.cloud_secret);
 
-        //有了权限再加
-        flpreview.addView(mGLView, new ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+        addGLView();
+    }
+
+    @SuppressLint("CheckResult")
+    private void addGLView() {
+        new RxPermissions(this)
+                .request(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO)
+                .subscribe(new Consumer<Boolean>() {
+                    @Override
+                    public void accept(Boolean isGranted) throws Exception {
+                        if (isGranted) {
+                            flpreview.addView(mGLView, new ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+                            mGLView.setOnTargetStatusChangeListener(new OnTargetChangeListener() {
+                                @Override
+                                public void targetChange(final Target target) {
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Toast.makeText(MainActivity.this, "target改变："+target.name(), Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                                }
+
+                                @Override
+                                public void targetLost() {
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Toast.makeText(MainActivity.this, "lost", Toast.LENGTH_SHORT).show();
+                                            sv.startScan();
+                                        }
+                                    });
+                                }
+
+                                @Override
+                                public void targetTrack() {
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Toast.makeText(MainActivity.this, "track", Toast.LENGTH_SHORT).show();
+                                            sv.stopScan();
+                                        }
+                                    });
+                                }
+                            });
+                        }else {
+                            showPermissionInfoHint();
+                        }
+                    }
+                });
+    }
+
+    private void showPermissionInfoHint() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.hint)
+                .setMessage(R.string.need_permission)
+                .setCancelable(false)
+                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                })
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        addGLView();
+                    }
+                })
+                .show();
     }
 
     @Override
     protected void setListener() {
-        mGLView.setOnTargetStatusChangeListener(new OnTargetChangeListener() {
-            @Override
-            public void targetTack(final Target target) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(MainActivity.this, target.name(), Toast.LENGTH_SHORT).show();
-                        sv.stopScan();
-                    }
-                });
-            }
 
-            @Override
-            public void targetLost() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(MainActivity.this, "loss", Toast.LENGTH_SHORT).show();
-                        sv.startScan();
-                    }
-                });
-            }
-        });
     }
 
     @Override

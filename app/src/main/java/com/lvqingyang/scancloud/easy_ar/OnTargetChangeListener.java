@@ -12,6 +12,7 @@ import cn.easyar.Target;
  * @since
  */
 public interface OnTargetChangeListener {
-    void targetTack(Target target);
+    void targetChange(Target target);
     void targetLost();
+    void targetTrack();
 }

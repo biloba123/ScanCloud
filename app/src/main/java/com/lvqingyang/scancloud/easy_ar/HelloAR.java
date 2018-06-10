@@ -27,9 +27,16 @@ import cn.easyar.CloudStatus;
 import cn.easyar.Frame;
 import cn.easyar.FunctorOfVoidFromCloudStatus;
 import cn.easyar.FunctorOfVoidFromCloudStatusAndListOfPointerOfTarget;
+import cn.easyar.FunctorOfVoidFromPermissionStatusAndString;
 import cn.easyar.FunctorOfVoidFromPointerOfTargetAndBool;
+import cn.easyar.FunctorOfVoidFromRecordStatusAndString;
 import cn.easyar.ImageTarget;
 import cn.easyar.ImageTracker;
+import cn.easyar.RecordProfile;
+import cn.easyar.RecordStatus;
+import cn.easyar.RecordVideoOrientation;
+import cn.easyar.RecordZoomMode;
+import cn.easyar.Recorder;
 import cn.easyar.Renderer;
 import cn.easyar.StorageType;
 import cn.easyar.Target;
@@ -49,6 +56,12 @@ class HelloAR {
     private ArrayList<ImageTracker> mImageTrackers;
     private VideoRenderer mVideoRenderer;
     private Renderer mVideobgRenderer;
+    private RecorderRenderer mRecorderRenderer;
+    /**
+     * Recorder 实现了对当前渲染环境的视频录制功能。
+     * 当前Recorder 只在 Android（4.3 或更新）和 iOS的OpenGL ES 2.0 环境下工作。
+     */
+    private Recorder mRecorder;
     private int mTrackedTarget = 0;
     private int mActiveTarget = 0;
     private ARVideo mARVideo = null;
@@ -56,8 +69,8 @@ class HelloAR {
     private boolean mViewportChanged = false;
     private Vec2I mViewSize = new Vec2I(0, 0);
     private int mRotation = 0;
-    private Vec4I mVec4I = new Vec4I(0, 0, 1280, 720);
-    private boolean mIsTargetTracking=false;
+    private Vec4I mViewport = new Vec4I(0, 0, 1280, 720);
+    private boolean mIsRecordingStarted = false;
     private OnTargetChangeListener mOnTargetChangeListener;
 
     HelloAR() {
@@ -132,17 +145,10 @@ class HelloAR {
             public void invoke(int status, ArrayList<Target> targets) {
                 if (status == CloudStatus.Success) {
                     Log.i("HelloAR", "CloudRecognizerCallBack: Success");
-                    mIsTargetTracking=true;
                 } else if (status == CloudStatus.Reconnecting) {
                     Log.i("HelloAR", "CloudRecognizerCallBack: Reconnecting");
                 } else if (status == CloudStatus.Fail) {
                     Log.i("HelloAR", "CloudRecognizerCallBack: Fail");
-                    if(mIsTargetTracking){
-                        if (mOnTargetChangeListener != null) {
-                            mOnTargetChangeListener.targetLost();
-                        }
-                        mIsTargetTracking=false;
-                    }
                 } else {
                     Log.i("HelloAR", "CloudRecognizerCallBack: " + Integer.toString(status));
                 }
@@ -178,6 +184,12 @@ class HelloAR {
     }
 
     public void dispose() {
+        if (mRecorder != null) {
+            mRecorder.dispose();
+            mRecorder = null;
+        }
+        mRecorderRenderer = null;
+
         if (mARVideo != null) {
             mARVideo.dispose();
             mARVideo = null;
@@ -243,9 +255,16 @@ class HelloAR {
             mVideobgRenderer.dispose();
         }
 
+        if (mRecorder != null) {
+            mRecorder.dispose();
+            mRecorder = null;
+        }
+
         mVideoRenderer = new VideoRenderer();
         mVideoRenderer.init();
         mVideobgRenderer = new Renderer();
+        mRecorderRenderer = new RecorderRenderer();
+        mRecorder = new Recorder();
     }
 
     public void resizeGL(int width, int height) {
@@ -272,10 +291,10 @@ class HelloAR {
         Frame frame = streamer.peek();
         try {
             updateViewport();
-            GLES20.glViewport(mVec4I.data[0], mVec4I.data[1], mVec4I.data[2], mVec4I.data[3]);
+            GLES20.glViewport(mViewport.data[0], mViewport.data[1], mViewport.data[2], mViewport.data[3]);
 
             if (mVideobgRenderer != null) {
-                mVideobgRenderer.render(frame, mVec4I);
+                mVideobgRenderer.render(frame, mViewport);
             }
 
             ArrayList<TargetInstance> targetInstances = frame.targetInstances();
@@ -297,16 +316,17 @@ class HelloAR {
                     }
                     //新的target
                     if (mTrackedTarget == 0) {
-                        //回调通知
-                        targetChange(target);
 
                         String meta = new String(Base64.decode(target.meta(), Base64.URL_SAFE));
-                        if (BuildConfig.DEBUG) Log.d(TAG, "render: meda:"+meta);
+                        if (BuildConfig.DEBUG) Log.d(TAG, "render: meda:" + meta);
                         if (mARVideo == null && mVideoRenderer != null && meta != null) {
+                            //target改变，回调通知
+                            targetChange(target);
                             mARVideo = new ARVideo();
                             mARVideo.openStreamingVideo(meta, mVideoRenderer.texId());
                         }
                         if (mARVideo != null) {
+                            targetTrack();
                             mARVideo.onFound();
                             mTrackedTarget = id;
                             mActiveTarget = id;
@@ -325,6 +345,7 @@ class HelloAR {
                 }
             } else {
                 if (mTrackedTarget != 0) {
+                    targetLost();
                     mARVideo.onLost();
                     mTrackedTarget = 0;
                 }
@@ -353,17 +374,84 @@ class HelloAR {
             }
             float scaleRatio = Math.max((float) mViewSize.data[0] / (float) size.data[0], (float) mViewSize.data[1] / (float) size.data[1]);
             Vec2I viewport_size = new Vec2I(Math.round(size.data[0] * scaleRatio), Math.round(size.data[1] * scaleRatio));
-            mVec4I = new Vec4I((mViewSize.data[0] - viewport_size.data[0]) / 2, (mViewSize.data[1] - viewport_size.data[1]) / 2, viewport_size.data[0], viewport_size.data[1]);
+            mViewport = new Vec4I((mViewSize.data[0] - viewport_size.data[0]) / 2, (mViewSize.data[1] - viewport_size.data[1]) / 2, viewport_size.data[0], viewport_size.data[1]);
 
             if ((camera != null) && camera.isOpened()) {
                 mViewportChanged = false;
+            }
+
+            if (mIsRecordingStarted) {
+                mRecorderRenderer.resize(mViewSize.data[0], mViewSize.data[1]);
             }
         }
     }
 
     private void targetChange(Target target) {
         if (mOnTargetChangeListener != null) {
-            mOnTargetChangeListener.targetTack(target);
+            mOnTargetChangeListener.targetChange(target);
         }
+    }
+
+    private void targetLost() {
+        if (mOnTargetChangeListener != null) {
+            mOnTargetChangeListener.targetLost();
+        }
+    }
+
+    private void targetTrack() {
+        if (mOnTargetChangeListener != null) {
+            mOnTargetChangeListener.targetTrack();
+        }
+    }
+
+    public void preRender() {
+        if (!mIsRecordingStarted) {
+            return;
+        }
+        mRecorderRenderer.preRender();
+    }
+
+    public void postRender() {
+        if (!mIsRecordingStarted) {
+            return;
+        }
+        mRecorderRenderer.postRender(mViewport);
+        mRecorder.updateFrame();
+    }
+
+    public void requestPermissions(FunctorOfVoidFromPermissionStatusAndString callback) {
+        mRecorder.requestPermissions(callback);
+    }
+
+    public void startRecording(String path, final FunctorOfVoidFromRecordStatusAndString callback) {
+        if (mIsRecordingStarted) {
+            return;
+        }
+        mRecorder.setOutputFile(path);
+        mRecorder.setZoomMode(RecordZoomMode.ZoomInWithAllContent);
+        mRecorder.setProfile(RecordProfile.Quality_720P_Middle);
+        mRecorderRenderer.resize(mViewSize.data[0], mViewSize.data[1]);
+        mRecorder.setInputTexture(mRecorderRenderer.getTextureId(), mViewSize.data[0], mViewSize.data[1]);
+        int mode = mViewSize.data[0] < mViewSize.data[1] ? RecordVideoOrientation.Portrait : RecordVideoOrientation.Landscape;
+        mRecorder.setVideoOrientation(mode);
+        mRecorder.open(new FunctorOfVoidFromRecordStatusAndString() {
+            @Override
+            public void invoke(int status, String value) {
+                if (status == RecordStatus.OnStopped) {
+                    mIsRecordingStarted = false;
+                }
+                callback.invoke(status, value);
+            }
+        });
+        mRecorder.start();
+        mIsRecordingStarted = true;
+    }
+
+    public void stopRecording() {
+        if (!mIsRecordingStarted) {
+            return;
+        }
+        mRecorder.stop();
+        mIsRecordingStarted = false;
     }
 }
