@@ -25,15 +25,17 @@ import cn.easyar.Engine;
 import cn.easyar.FunctorOfVoidFromPermissionStatusAndString;
 import cn.easyar.FunctorOfVoidFromRecordStatusAndString;
 
-public class GLView extends GLSurfaceView {
+public class GLView_ extends GLSurfaceView {
     private HelloAR mHelloAR;
     private String cloud_server_address;
     private String cloud_key;
     private String cloud_secret;
+    private HelloAR mHelloARBack;
+    private HelloAR mHelloARFront;
     private boolean mIsBackCamera;
     private static final String TAG = "GLView";
 
-    public GLView(Context context, String cloud_server_address, String cloud_key, String cloud_secret) {
+    public GLView_(Context context, String cloud_server_address, String cloud_key, String cloud_secret) {
         super(context);
         this.cloud_server_address = cloud_server_address;
         this.cloud_key = cloud_key;
@@ -42,23 +44,27 @@ public class GLView extends GLSurfaceView {
         setEGLContextFactory(new ContextFactory());
         setEGLConfigChooser(new ConfigChooser());
 
-        mHelloAR = new HelloAR(CameraDeviceType.Back);;
+        mHelloARBack=new HelloAR(CameraDeviceType.Back);
+        mHelloARFront=new HelloAR(CameraDeviceType.Front);
+        mHelloAR = mHelloARBack;
         mIsBackCamera=true;
 
-        this.setRenderer(new Renderer() {
+        this.setRenderer(new GLSurfaceView.Renderer() {
             @Override
             public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-                synchronized (mHelloAR) {
+                synchronized (this) {
                     if (BuildConfig.DEBUG) Log.d(TAG, "onSurfaceCreated: ");
-                    mHelloAR.initGL();
+                    mHelloARBack.initGL();
+                    mHelloARFront.initGL();
                 }
             }
 
             @Override
             public void onSurfaceChanged(GL10 gl, int w, int h) {
-                synchronized (mHelloAR) {
+                synchronized (this) {
                     if (BuildConfig.DEBUG) Log.d(TAG, "onSurfaceChanged: ");
-                    mHelloAR.resizeGL(w, h);
+                    mHelloARBack.resizeGL(w, h);
+                    mHelloARFront.resizeGL(w, h);
                 }
             }
 
@@ -94,23 +100,38 @@ public class GLView extends GLSurfaceView {
     protected void onAttachedToWindow() {
         if (BuildConfig.DEBUG) Log.d(TAG, "onAttachedToWindow: ");
         super.onAttachedToWindow();
-        synchronized (mHelloAR) {
-            if (mHelloAR.initialize(cloud_server_address, cloud_key, cloud_secret)) {
-                mHelloAR.start();
-            }
+        synchronized (this) {
+            mHelloARBack.initialize(cloud_server_address, cloud_key, cloud_secret);
+            mHelloARFront.initialize(cloud_server_address, cloud_key, cloud_secret);
+            mHelloAR.start();
+        }
+    }
+
+    private void switchHelloAR(HelloAR helloARNew, HelloAR helloAROld) {
+        synchronized (helloARNew) {
+            helloAROld.stop();
+            mHelloAR=helloARNew;
+            mHelloAR.start();
         }
     }
 
     public void switchCamera(){
+        if (mIsBackCamera) {
+            switchHelloAR(mHelloARFront, mHelloARBack);
+        }else {
+            switchHelloAR(mHelloARBack, mHelloARFront);
+        }
         mIsBackCamera=!mIsBackCamera;
     }
 
     @Override
     protected void onDetachedFromWindow() {
         if (BuildConfig.DEBUG) Log.d(TAG, "onDetachedFromWindow: ");
-        synchronized (mHelloAR) {
-            mHelloAR.stop();
-            mHelloAR.dispose();
+        synchronized (this) {
+            mHelloARBack.stop();
+            mHelloARBack.dispose();
+            mHelloARFront.stop();
+            mHelloARFront.dispose();
         }
         super.onDetachedFromWindow();
     }
@@ -169,7 +190,7 @@ public class GLView extends GLSurfaceView {
     }
 
 
-    private static class ContextFactory implements EGLContextFactory {
+    private static class ContextFactory implements GLSurfaceView.EGLContextFactory {
         private static int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
 
         @Override
@@ -186,7 +207,7 @@ public class GLView extends GLSurfaceView {
         }
     }
 
-    private static class ConfigChooser implements EGLConfigChooser {
+    private static class ConfigChooser implements GLSurfaceView.EGLConfigChooser {
         @Override
         public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display) {
             final int EGL_OPENGL_ES2_BIT = 0x0004;

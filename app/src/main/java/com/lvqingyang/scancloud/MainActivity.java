@@ -138,7 +138,7 @@ public class MainActivity extends BaseActivity {
     public boolean onOptionsItemSelected(MenuItem paramMenuItem) {
         switch (paramMenuItem.getItemId()) {
             case R.id.item_switch:
-
+                mGLView.switchCamera();
                 return true;
             case R.id.item_flashlight:
                 if (mIsFlashOn) {

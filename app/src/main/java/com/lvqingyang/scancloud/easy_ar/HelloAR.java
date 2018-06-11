@@ -22,7 +22,6 @@ import java.util.HashSet;
 import cn.easyar.CameraCalibration;
 import cn.easyar.CameraDevice;
 import cn.easyar.CameraDeviceFocusMode;
-import cn.easyar.CameraDeviceType;
 import cn.easyar.CameraFrameStreamer;
 import cn.easyar.CloudRecognizer;
 import cn.easyar.CloudStatus;
@@ -74,8 +73,10 @@ class HelloAR {
     private Vec4I mViewport = new Vec4I(0, 0, 1280, 720);
     private boolean mIsRecordingStarted = false;
     private OnTargetChangeListener mOnTargetChangeListener;
+    private int mCameraType;
 
-    HelloAR() {
+    HelloAR(int cameraType) {
+        mCameraType=cameraType;
         mImageTrackers = new ArrayList<>();
     }
 
@@ -125,9 +126,8 @@ class HelloAR {
         mCloudRecognizer.attachStreamer(streamer);
 
         boolean status = true;
-        status &= camera.open(CameraDeviceType.Default);
+        status &= camera.open(mCameraType);
         camera.setSize(new Vec2I(1280, 720));
-
         mCloudRecognizer.open(cloud_server_address, cloud_key, cloud_secret, new FunctorOfVoidFromCloudStatus() {
             @Override
             public void invoke(int status) {
