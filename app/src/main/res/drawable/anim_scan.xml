@@ -5,7 +5,7 @@
         android:duration="@integer/duration_scan"/>
     <item
         android:drawable="@drawable/jmdh_00001"
-        android:duration="20"/>
+        android:duration="5"/>
     <item
         android:drawable="@drawable/jmdh_00002"
         android:duration="@integer/duration_scan"/>

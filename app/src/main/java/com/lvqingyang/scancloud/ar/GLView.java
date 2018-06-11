@@ -6,7 +6,7 @@
 //
 //================================================================================================================================
 
-package com.lvqingyang.scancloud.easy_ar;
+package com.lvqingyang.scancloud.ar;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
@@ -20,22 +20,19 @@ import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.opengles.GL10;
 
-import cn.easyar.CameraDeviceType;
 import cn.easyar.Engine;
 import cn.easyar.FunctorOfVoidFromPermissionStatusAndString;
 import cn.easyar.FunctorOfVoidFromRecordStatusAndString;
 
-public class GLView_ extends GLSurfaceView {
+public class GLView extends GLSurfaceView {
     private HelloAR mHelloAR;
     private String cloud_server_address;
     private String cloud_key;
     private String cloud_secret;
-    private HelloAR mHelloARBack;
-    private HelloAR mHelloARFront;
     private boolean mIsBackCamera;
     private static final String TAG = "GLView";
 
-    public GLView_(Context context, String cloud_server_address, String cloud_key, String cloud_secret) {
+    public GLView(Context context, String cloud_server_address, String cloud_key, String cloud_secret) {
         super(context);
         this.cloud_server_address = cloud_server_address;
         this.cloud_key = cloud_key;
@@ -44,27 +41,27 @@ public class GLView_ extends GLSurfaceView {
         setEGLContextFactory(new ContextFactory());
         setEGLConfigChooser(new ConfigChooser());
 
-        mHelloARBack=new HelloAR(CameraDeviceType.Back);
-        mHelloARFront=new HelloAR(CameraDeviceType.Front);
-        mHelloAR = mHelloARBack;
-        mIsBackCamera=true;
+        mHelloAR = new HelloAR();
 
-        this.setRenderer(new GLSurfaceView.Renderer() {
+        //GLSurfaceView的生命周期的回调。
+        this.setRenderer(new Renderer() {
             @Override
             public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-                synchronized (this) {
-                    if (BuildConfig.DEBUG) Log.d(TAG, "onSurfaceCreated: ");
-                    mHelloARBack.initGL();
-                    mHelloARFront.initGL();
+                synchronized (mHelloAR) {
+                    if (BuildConfig.DEBUG) {
+                        Log.d(TAG, "onSurfaceCreated: ");
+                    }
+                    mHelloAR.initGL();
                 }
             }
 
             @Override
             public void onSurfaceChanged(GL10 gl, int w, int h) {
-                synchronized (this) {
-                    if (BuildConfig.DEBUG) Log.d(TAG, "onSurfaceChanged: ");
-                    mHelloARBack.resizeGL(w, h);
-                    mHelloARFront.resizeGL(w, h);
+                synchronized (mHelloAR) {
+                    if (BuildConfig.DEBUG) {
+                        Log.d(TAG, "onSurfaceChanged: ");
+                    }
+                    mHelloAR.resizeGL(w, h);
                 }
             }
 
@@ -98,40 +95,25 @@ public class GLView_ extends GLSurfaceView {
 
     @Override
     protected void onAttachedToWindow() {
-        if (BuildConfig.DEBUG) Log.d(TAG, "onAttachedToWindow: ");
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, "onAttachedToWindow: ");
+        }
         super.onAttachedToWindow();
-        synchronized (this) {
-            mHelloARBack.initialize(cloud_server_address, cloud_key, cloud_secret);
-            mHelloARFront.initialize(cloud_server_address, cloud_key, cloud_secret);
-            mHelloAR.start();
+        synchronized (mHelloAR) {
+            if (mHelloAR.initialize(cloud_server_address, cloud_key, cloud_secret)) {
+                mHelloAR.start();
+            }
         }
-    }
-
-    private void switchHelloAR(HelloAR helloARNew, HelloAR helloAROld) {
-        synchronized (helloARNew) {
-            helloAROld.stop();
-            mHelloAR=helloARNew;
-            mHelloAR.start();
-        }
-    }
-
-    public void switchCamera(){
-        if (mIsBackCamera) {
-            switchHelloAR(mHelloARFront, mHelloARBack);
-        }else {
-            switchHelloAR(mHelloARBack, mHelloARFront);
-        }
-        mIsBackCamera=!mIsBackCamera;
     }
 
     @Override
     protected void onDetachedFromWindow() {
-        if (BuildConfig.DEBUG) Log.d(TAG, "onDetachedFromWindow: ");
-        synchronized (this) {
-            mHelloARBack.stop();
-            mHelloARBack.dispose();
-            mHelloARFront.stop();
-            mHelloARFront.dispose();
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, "onDetachedFromWindow: ");
+        }
+        synchronized (mHelloAR) {
+            mHelloAR.stop();
+            mHelloAR.dispose();
         }
         super.onDetachedFromWindow();
     }
@@ -184,13 +166,15 @@ public class GLView_ extends GLSurfaceView {
     }
 
     public void setFlashState(boolean isOn) {
-        if (mIsBackCamera) {
-            mHelloAR.getCamera().setFlashTorchMode(isOn);
-        }
+        mHelloAR.setFlashState(isOn);
+    }
+
+    public void switchCamera(){
+        mHelloAR.switchCamera();
     }
 
 
-    private static class ContextFactory implements GLSurfaceView.EGLContextFactory {
+    private static class ContextFactory implements EGLContextFactory {
         private static int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
 
         @Override
@@ -207,7 +191,7 @@ public class GLView_ extends GLSurfaceView {
         }
     }
 
-    private static class ConfigChooser implements GLSurfaceView.EGLConfigChooser {
+    private static class ConfigChooser implements EGLConfigChooser {
         @Override
         public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display) {
             final int EGL_OPENGL_ES2_BIT = 0x0004;

@@ -6,7 +6,7 @@
 //
 //================================================================================================================================
 
-package com.lvqingyang.scancloud.easy_ar;
+package com.lvqingyang.scancloud.ar;
 
 import android.opengl.GLES20;
 

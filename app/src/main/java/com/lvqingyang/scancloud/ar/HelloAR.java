@@ -6,7 +6,7 @@
 //
 //================================================================================================================================
 
-package com.lvqingyang.scancloud.easy_ar;
+package com.lvqingyang.scancloud.ar;
 
 import android.opengl.GLES20;
 import android.util.Base64;
@@ -22,6 +22,7 @@ import java.util.HashSet;
 import cn.easyar.CameraCalibration;
 import cn.easyar.CameraDevice;
 import cn.easyar.CameraDeviceFocusMode;
+import cn.easyar.CameraDeviceType;
 import cn.easyar.CameraFrameStreamer;
 import cn.easyar.CloudRecognizer;
 import cn.easyar.CloudStatus;
@@ -39,7 +40,6 @@ import cn.easyar.RecordVideoOrientation;
 import cn.easyar.RecordZoomMode;
 import cn.easyar.Recorder;
 import cn.easyar.Renderer;
-import cn.easyar.StorageType;
 import cn.easyar.Target;
 import cn.easyar.TargetInstance;
 import cn.easyar.TargetStatus;
@@ -73,49 +73,15 @@ class HelloAR {
     private Vec4I mViewport = new Vec4I(0, 0, 1280, 720);
     private boolean mIsRecordingStarted = false;
     private OnTargetChangeListener mOnTargetChangeListener;
-    private int mCameraType;
+    private boolean mIsBackCamera;
 
-    HelloAR(int cameraType) {
-        mCameraType=cameraType;
+
+    HelloAR() {
         mImageTrackers = new ArrayList<>();
     }
 
     public void setOnTargetChangeListener(OnTargetChangeListener onTargetChangeListener) {
         mOnTargetChangeListener = onTargetChangeListener;
-    }
-
-    private void loadFromImage(ImageTracker tracker, String path) {
-        ImageTarget target = new ImageTarget();
-        String jstr = "{\n"
-                + "  \"images\" :\n"
-                + "  [\n"
-                + "    {\n"
-                + "      \"image\" : \"" + path + "\",\n"
-                + "      \"name\" : \"" + path.substring(0, path.indexOf(".")) + "\"\n"
-                + "    }\n"
-                + "  ]\n"
-                + "}";
-        target.setup(jstr, StorageType.Assets | StorageType.Json, "");
-        tracker.loadTarget(target, new FunctorOfVoidFromPointerOfTargetAndBool() {
-            @Override
-            public void invoke(Target target, boolean status) {
-                Log.i("HelloAR", String.format("load target (%b): %s (%d)", status, target.name(), target.runtimeID()));
-            }
-        });
-    }
-
-    private void loadAllFromJsonFile(ImageTracker tracker, String path) {
-        for (ImageTarget target : ImageTarget.setupAll(path, StorageType.Assets)) {
-            tracker.loadTarget(target, new FunctorOfVoidFromPointerOfTargetAndBool() {
-                @Override
-                public void invoke(Target target, boolean status) {
-                    try {
-                        Log.i("HelloAR", String.format("load target (%b): %s (%d)", status, target.name(), target.runtimeID()));
-                    } catch (Throwable ex) {
-                    }
-                }
-            });
-        }
     }
 
     public boolean initialize(String cloud_server_address, String cloud_key, String cloud_secret) {
@@ -126,8 +92,9 @@ class HelloAR {
         mCloudRecognizer.attachStreamer(streamer);
 
         boolean status = true;
-        status &= camera.open(mCameraType);
+        status &= camera.open(CameraDeviceType.Back);
         camera.setSize(new Vec2I(1280, 720));
+        mIsBackCamera = true;
         mCloudRecognizer.open(cloud_server_address, cloud_key, cloud_secret, new FunctorOfVoidFromCloudStatus() {
             @Override
             public void invoke(int status) {
@@ -275,6 +242,21 @@ class HelloAR {
         mViewportChanged = true;
     }
 
+    public void preRender() {
+        if (!mIsRecordingStarted) {
+            return;
+        }
+        mRecorderRenderer.preRender();
+    }
+
+    public void postRender() {
+        if (!mIsRecordingStarted) {
+            return;
+        }
+        mRecorderRenderer.postRender(mViewport);
+        mRecorder.updateFrame();
+    }
+
     public void render() {
         GLES20.glClearColor(1.f, 1.f, 1.f, 1.f);
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
@@ -288,7 +270,9 @@ class HelloAR {
         }
 
         if (streamer == null) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "render: streamer == null");
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "render: streamer == null");
+            }
             return;
         }
         Frame frame = streamer.peek();
@@ -321,8 +305,10 @@ class HelloAR {
                     if (mTrackedTarget == 0) {
 
                         String meta = new String(Base64.decode(target.meta(), Base64.URL_SAFE));
-                        if (BuildConfig.DEBUG) Log.d(TAG, "render: meda:" + meta);
-                        TargetMeta targetMeta= MyJson.fromJson(meta, TargetMeta.class);
+                        if (BuildConfig.DEBUG) {
+                            Log.d(TAG, "render: meda:" + meta);
+                        }
+                        TargetMeta targetMeta = MyJson.fromJson(meta, TargetMeta.class);
                         if (mARVideo == null && mVideoRenderer != null && targetMeta != null) {
                             //target改变，回调通知
                             targetChange(target, targetMeta);
@@ -390,39 +376,6 @@ class HelloAR {
         }
     }
 
-    private void targetChange(Target target, TargetMeta targetMeta) {
-        if (mOnTargetChangeListener != null) {
-            mOnTargetChangeListener.targetChange(target, targetMeta);
-        }
-    }
-
-    private void targetLost() {
-        if (mOnTargetChangeListener != null) {
-            mOnTargetChangeListener.targetLost();
-        }
-    }
-
-    private void targetTrack() {
-        if (mOnTargetChangeListener != null) {
-            mOnTargetChangeListener.targetTrack();
-        }
-    }
-
-    public void preRender() {
-        if (!mIsRecordingStarted) {
-            return;
-        }
-        mRecorderRenderer.preRender();
-    }
-
-    public void postRender() {
-        if (!mIsRecordingStarted) {
-            return;
-        }
-        mRecorderRenderer.postRender(mViewport);
-        mRecorder.updateFrame();
-    }
-
     public void requestPermissions(FunctorOfVoidFromPermissionStatusAndString callback) {
         mRecorder.requestPermissions(callback);
     }
@@ -432,7 +385,7 @@ class HelloAR {
             return;
         }
         mRecorder.setOutputFile(path);
-        mRecorder.setZoomMode(RecordZoomMode.ZoomInWithAllContent);
+        mRecorder.setZoomMode(RecordZoomMode.NoZoomAndClip);
         mRecorder.setProfile(RecordProfile.Quality_720P_Middle);
         mRecorderRenderer.resize(mViewSize.data[0], mViewSize.data[1]);
         mRecorder.setInputTexture(mRecorderRenderer.getTextureId(), mViewSize.data[0], mViewSize.data[1]);
@@ -459,7 +412,36 @@ class HelloAR {
         mIsRecordingStarted = false;
     }
 
-    public CameraDevice getCamera() {
-        return camera;
+    public void setFlashState(boolean isOn) {
+        if (mIsBackCamera) {
+            camera.setFlashTorchMode(isOn);
+        }
+    }
+
+    public void switchCamera() {
+        camera.stop();
+        camera.open(mIsBackCamera ? CameraDeviceType.Front : CameraDeviceType.Back);
+        camera.setSize(new Vec2I(1280, 720));
+        camera.start();
+        camera.setFocusMode(CameraDeviceFocusMode.Continousauto);
+        mIsBackCamera = !mIsBackCamera;
+    }
+
+    private void targetChange(Target target, TargetMeta targetMeta) {
+        if (mOnTargetChangeListener != null) {
+            mOnTargetChangeListener.targetChange(target, targetMeta);
+        }
+    }
+
+    private void targetTrack() {
+        if (mOnTargetChangeListener != null) {
+            mOnTargetChangeListener.targetTrack();
+        }
+    }
+
+    private void targetLost() {
+        if (mOnTargetChangeListener != null) {
+            mOnTargetChangeListener.targetLost();
+        }
     }
 }

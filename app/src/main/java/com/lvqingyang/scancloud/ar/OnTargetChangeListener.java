@@ -1,4 +1,4 @@
-package com.lvqingyang.scancloud.easy_ar;
+package com.lvqingyang.scancloud.ar;
 
 import com.lvqingyang.scancloud.bean.TargetMeta;
 
