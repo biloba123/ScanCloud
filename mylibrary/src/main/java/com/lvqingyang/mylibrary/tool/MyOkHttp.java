@@ -25,7 +25,7 @@ import okhttp3.Response;
  */
 
 public class MyOkHttp {
-    private static MyOkHttp sMyOkHttp;
+    private static volatile MyOkHttp sMyOkHttp;
     private OkHttpClient mClient;
 
     public static final MediaType MEDIA_TYPE_JSON
@@ -45,7 +45,11 @@ public class MyOkHttp {
 
     public static MyOkHttp getInstance(){
         if (sMyOkHttp == null) {
-            sMyOkHttp=new MyOkHttp();
+            synchronized (MyOkHttp.class){
+                if (sMyOkHttp == null) {
+                    sMyOkHttp=new MyOkHttp();
+                }
+            }
         }
         return sMyOkHttp;
     }
@@ -139,7 +143,7 @@ public class MyOkHttp {
     public String  postForm(String url,  List<NameValuePair> params) throws Exception {
         FormBody.Builder builder=new FormBody.Builder();
         for (NameValuePair param : params) {
-            builder.add(param.name.toString(), param.value.toString());
+            builder.add(param.name, param.value);
         }
         FormBody formBody=builder.build();
 
@@ -179,31 +183,29 @@ public class MyOkHttp {
 
     /**
      * 参数键值对
-     * @param <N>
-     * @param <T>
      */
-    public static class NameValuePair<N,T>{
-        private N name;
-        private T value;
+    public static class NameValuePair{
+        private String name;
+        private String value;
 
-        public NameValuePair(N name, T value) {
+        public NameValuePair(String name, String value) {
             this.name = name;
             this.value = value;
         }
 
-        public N getName() {
+        public String getName() {
             return name;
         }
 
-        public void setName(N name) {
+        public void setName(String name) {
             this.name = name;
         }
 
-        public T getValue() {
+        public String getValue() {
             return value;
         }
 
-        public void setValue(T value) {
+        public void setValue(String value) {
             this.value = value;
         }
     }

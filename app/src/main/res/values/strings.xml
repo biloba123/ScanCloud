@@ -8,4 +8,8 @@
     <string name="find_ar">发现AR</string>
     <string name="recording">AR录制中...</string>
     <string name="error">AR录制出错</string>
+    <string name="more_cases">更多案例</string>
+    <string name="about_sc">关于扫云</string>
+    <string name="about_sc_detail">广州小马云科技有限公司立足于广州，面向全球。是一家专注于AR技术和服务的供应商，致力于推动AR的创新和应用。持续提供AR咨询，解决方案，服务等。以顶尖人才和服务、技术为客户创造非凡价值。\n\n主要功能：识别商品包装 了解商品信息，商品使用说明，识别路牌标识，寻找最佳路线，识别特定互动卡，体验AR小游戏，收集销售信息提供AR防伪功能，VR3D全景 。</string>
+    <string name="fork_sc">关注扫云，获取最新AR资讯</string>
 </resources>

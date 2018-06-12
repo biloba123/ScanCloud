@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".AboutActivity">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/medium_spacing"
+        android:text="@string/about_sc_detail"
+        android:textColor="@color/text_default_dark"
+        android:textSize="@dimen/sub_medium_text"
+        android:lineSpacingMultiplier="1.2"
+        android:letterSpacing="0.1"/>
+
+    <Button
+        android:id="@+id/btn_fork"
+        android:layout_width="240dp"
+        android:layout_height="36dp"
+        android:text="@string/fork_sc"
+        android:textSize="@dimen/medium_text"
+        android:layout_marginBottom="@dimen/medium_spacing"
+        android:background="@mipmap/bg_btn_fork"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"/>
+</RelativeLayout>
