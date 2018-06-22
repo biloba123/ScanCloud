@@ -2,16 +2,20 @@ package com.lvqingyang.scancloud;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
 import com.lvqingyang.mylibrary.base.BaseActivity;
+import com.lvqingyang.mylibrary.tool.MyOkHttp;
 import com.youth.banner.Banner;
 import com.youth.banner.BannerConfig;
 import com.youth.banner.Transformer;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class FindARActivity extends BaseActivity {
     private static final String TAG = "FindARActivity";
@@ -52,19 +56,20 @@ public class FindARActivity extends BaseActivity {
 
     @Override
     protected void initData() {
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                List<MyOkHttp.NameValuePair> pairs = new ArrayList<>();
-//                pairs.add(new MyOkHttp.NameValuePair("choice", "2"));
-//                try {
-//                    String s = MyOkHttp.getInstance().postForm("http://111.230.247.95/AR_CLOUD/login.php", pairs);
-//                    if (BuildConfig.DEBUG) Log.d(TAG, "run: " + s);
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }).start();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                List<MyOkHttp.NameValuePair> pairs = new ArrayList<>();
+                pairs.add(new MyOkHttp.NameValuePair("count", "2"));
+                pairs.add(new MyOkHttp.NameValuePair("first", "0"));
+                try {
+                    String s = MyOkHttp.getInstance().postForm("http://111.230.247.95/AR_CLOUD/series.php", pairs);
+                    if (BuildConfig.DEBUG) Log.d(TAG, "run: " + s);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     @Override

@@ -23,9 +23,17 @@ public class IntentHelper {
         }
     }
 
+    public static void shareText(Activity activity, String text){
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_SEND);
+        intent.putExtra(Intent.EXTRA_TEXT, text);
+        intent.setType("text/plain");
+        //设置分享列表的标题，并且每次都显示分享列表
+        activity.startActivity(Intent.createChooser(intent, "分享到"));
+    }
+
     public static boolean hasRelateApp(Activity activity, Intent intent){
         return intent.resolveActivity(activity.getPackageManager())!=null;
     }
-
 
 }
