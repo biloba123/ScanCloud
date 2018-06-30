@@ -1,5 +1,6 @@
 package com.lvqingyang.scancloud;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -23,6 +24,12 @@ public class FindARActivity extends BaseActivity {
     private android.widget.LinearLayout llcase;
     private android.widget.Button btnmorecases;
     private android.widget.Button btnaboutsc;
+
+    public static Intent newIntent(Context context) {
+        Intent starter = new Intent(context, FindARActivity.class);
+//        starter.putExtra();
+        return starter;
+    }
 
     @Override
     protected void getBundleExtras(Bundle bundle) {

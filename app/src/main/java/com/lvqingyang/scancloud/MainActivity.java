@@ -122,6 +122,12 @@ public class MainActivity extends BaseActivity {
             }
         });
 
+        tvfindar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(FindARActivity.newIntent(MainActivity.this));
+            }
+        });
 
     }
 
